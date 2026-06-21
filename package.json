@@ -1,0 +1,13 @@
+{
+  "name": "pricing-poster-editor",
+  "version": "1.0.0",
+  "description": "可视化定价海报编辑系统 - 拖拽排版、规则互斥校验、复合金额计算",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

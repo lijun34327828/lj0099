@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>定价海报可视化编辑器</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-container">
+  <header class="app-header">
+    <div class="header-left">
+      <h1>🎿 滑雪场定价海报编辑器</h1>
+      <span class="subtitle">门店立式宣传展板 · 可视化拖拽排版</span>
+    </div>
+    <div class="header-right">
+      <div class="status-indicator">
+        <span class="status-dot" id="engineStatus"></span>
+        <span id="engineStatusText">计算引擎连接中...</span>
+      </div>
+      <button class="btn btn-primary" id="btnPreview">预览海报</button>
+    </div>
+  </header>
+
+  <div class="main-content">
+    <aside class="sidebar left-sidebar">
+      <div class="sidebar-section">
+        <h3>📦 服务模块库</h3>
+        <div class="module-library" id="moduleLibrary">
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3>⏰ 时段设置</h3>
+        <div class="period-tabs">
+          <button class="period-tab active" data-period="weekday">平日</button>
+          <button class="period-tab" data-period="night">夜间</button>
+          <button class="period-tab" data-period="weekend">周末</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>🎨 展示模板</h3>
+        <div class="template-grid" id="templateGrid">
+        </div>
+      </div>
+    </aside>
+
+    <main class="canvas-area">
+      <div class="canvas-toolbar">
+        <div class="canvas-size-info">
+          画布尺寸：600 × 1000 px (立式海报 2:1)
+        </div>
+        <div class="canvas-actions">
+          <button class="btn btn-small" id="btnClear">清空画布</button>
+          <button class="btn btn-small" id="btnReset">重置布局</button>
+        </div>
+      </div>
+      
+      <div class="canvas-wrapper">
+        <div class="poster-canvas" id="posterCanvas">
+          <div class="poster-header">
+            <div class="poster-title" id="posterTitle">冰雪世界滑雪场</div>
+            <div class="poster-subtitle" id="posterSubtitle">超值畅滑套餐</div>
+          </div>
+          <div class="poster-content" id="posterContent">
+            <div class="empty-hint">
+              <p>👆 从左侧拖拽服务模块到这里</p>
+              <p class="hint-sub">自由排版 · 实时预览</p>
+            </div>
+          </div>
+          <div class="poster-footer">
+            <div class="poster-footer-text">📍 雪具大厅一层服务台</div>
+            <div class="poster-footer-text">📞 400-888-8888</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="validation-panel" id="validationPanel">
+        <div class="validation-header">
+          <span class="validation-icon">⚠️</span>
+          <span>规则校验</span>
+        </div>
+        <div class="validation-content" id="validationContent">
+          <p class="validation-placeholder">配置定价规则后自动校验</p>
+        </div>
+      </div>
+    </main>
+
+    <aside class="sidebar right-sidebar">
+      <div class="sidebar-section">
+        <h3>⚙️ 定价规则配置</h3>
+        <div class="rule-config" id="ruleConfig">
+          <p class="section-hint">请先从左侧拖拽服务模块到画布</p>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>🏷️ 折扣规则</h3>
+        <div class="discount-config" id="discountConfig">
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>🧮 模拟预约计算</h3>
+        <div class="booking-simulator">
+          <div class="form-group">
+            <label>预约时段</label>
+            <select id="simPeriod">
+              <option value="weekday">平日</option>
+              <option value="night">夜间</option>
+              <option value="weekend">周末</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>人数</label>
+            <input type="number" id="simPeople" value="2" min="1" max="100">
+          </div>
+          <div class="form-group">
+            <label>租赁天数</label>
+            <input type="number" id="simDays" value="1" min="1" max="30">
+          </div>
+          <div class="form-group">
+            <label>选择服务</label>
+            <div class="service-checkboxes" id="serviceCheckboxes">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>应用折扣</label>
+            <div class="discount-checkboxes" id="discountCheckboxes">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>💰 实时计算结果</h3>
+        <div class="calculation-result" id="calculationResult">
+          <div class="result-placeholder">配置后自动计算</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="preview-modal" id="previewModal">
+  <div class="preview-overlay"></div>
+  <div class="preview-content">
+    <button class="preview-close" id="previewClose">×</button>
+    <div class="preview-canvas-container">
+      <div class="poster-canvas preview-mode" id="previewCanvas">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
