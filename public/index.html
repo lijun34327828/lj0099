@@ -11,12 +11,20 @@
   <header class="app-header">
     <div class="header-left">
       <h1>🎿 滑雪场定价海报编辑器</h1>
-      <span class="subtitle">门店立式宣传展板 · 可视化拖拽排版</span>
+      <span class="subtitle">门店立式宣传展板 · 可视化拖拽排版 · 多规则联动计算</span>
     </div>
     <div class="header-right">
       <div class="status-indicator">
         <span class="status-dot" id="engineStatus"></span>
         <span id="engineStatusText">计算引擎连接中...</span>
+      </div>
+      <div class="history-actions">
+        <button class="btn btn-small" id="btnUndo" title="撤销 (Ctrl+Z)">↶ 撤销</button>
+        <button class="btn btn-small" id="btnRedo" title="重做 (Ctrl+Y)">↷ 重做</button>
+      </div>
+      <div class="io-actions">
+        <button class="btn btn-small" id="btnImport">📥 导入配置</button>
+        <button class="btn btn-small" id="btnExport">📤 导出配置</button>
       </div>
       <button class="btn btn-primary" id="btnPreview">预览海报</button>
     </div>
@@ -26,10 +34,9 @@
     <aside class="sidebar left-sidebar">
       <div class="sidebar-section">
         <h3>📦 服务模块库</h3>
-        <div class="module-library" id="moduleLibrary">
-        </div>
+        <div class="module-library" id="moduleLibrary"></div>
       </div>
-      
+
       <div class="sidebar-section">
         <h3>⏰ 时段设置</h3>
         <div class="period-tabs">
@@ -40,9 +47,19 @@
       </div>
 
       <div class="sidebar-section">
-        <h3>🎨 展示模板</h3>
-        <div class="template-grid" id="templateGrid">
+        <h3>📦 套餐管理</h3>
+        <div class="package-manager">
+          <button class="btn btn-small btn-block" id="btnCreatePackage">+ 创建套餐</button>
+          <button class="btn btn-small btn-block" id="btnBoxSelect" style="margin-top: 6px;">⬛ 框选组套餐</button>
+          <div class="package-list" id="packageList">
+            <p class="section-hint">暂无套餐，框选画布模块创建</p>
+          </div>
         </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>🎨 展示模板</h3>
+        <div class="template-grid" id="templateGrid"></div>
       </div>
     </aside>
 
@@ -52,12 +69,13 @@
           画布尺寸：600 × 1000 px (立式海报 2:1)
         </div>
         <div class="canvas-actions">
+          <button class="btn btn-small" id="btnExitBoxSelect" style="display: none;">✕ 退出框选</button>
           <button class="btn btn-small" id="btnClear">清空画布</button>
           <button class="btn btn-small" id="btnReset">重置布局</button>
         </div>
       </div>
-      
-      <div class="canvas-wrapper">
+
+      <div class="canvas-wrapper" id="canvasWrapper">
         <div class="poster-canvas" id="posterCanvas">
           <div class="poster-header">
             <div class="poster-title" id="posterTitle">冰雪世界滑雪场</div>
@@ -66,7 +84,7 @@
           <div class="poster-content" id="posterContent">
             <div class="empty-hint">
               <p>👆 从左侧拖拽服务模块到这里</p>
-              <p class="hint-sub">自由排版 · 实时预览</p>
+              <p class="hint-sub">自由排版 · 实时预览 · 框选组套餐</p>
             </div>
           </div>
           <div class="poster-footer">
@@ -74,6 +92,7 @@
             <div class="poster-footer-text">📞 400-888-8888</div>
           </div>
         </div>
+        <div class="box-selection-rect" id="boxSelectionRect"></div>
       </div>
 
       <div class="validation-panel" id="validationPanel">
@@ -83,6 +102,17 @@
         </div>
         <div class="validation-content" id="validationContent">
           <p class="validation-placeholder">配置定价规则后自动校验</p>
+        </div>
+      </div>
+
+      <div class="hit-chain-panel" id="hitChainPanel">
+        <div class="validation-header">
+          <span class="validation-icon">🔗</span>
+          <span>规则命中链路</span>
+          <span class="hit-chain-toggle" id="hitChainToggle">▼</span>
+        </div>
+        <div class="hit-chain-content" id="hitChainContent">
+          <p class="validation-placeholder">执行计算后显示命中链路</p>
         </div>
       </div>
     </main>
@@ -96,15 +126,29 @@
       </div>
 
       <div class="sidebar-section">
-        <h3>🏷️ 折扣规则</h3>
-        <div class="discount-config" id="discountConfig">
+        <h3>📊 阶梯人数定价</h3>
+        <div class="tier-config" id="tierConfig">
+          <p class="section-hint">选择画布模块后配置阶梯定价</p>
         </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>🏷️ 折扣规则</h3>
+        <div class="discount-config" id="discountConfig"></div>
       </div>
 
       <div class="sidebar-section">
         <h3>🧮 模拟预约计算</h3>
         <div class="booking-simulator">
           <div class="form-group">
+            <label>预约模式</label>
+            <div class="segmented-control">
+              <button class="segment-btn active" data-mode="single">单日</button>
+              <button class="segment-btn" data-mode="multi">多日</button>
+            </div>
+          </div>
+
+          <div class="form-group" id="singleDayGroup">
             <label>预约时段</label>
             <select id="simPeriod">
               <option value="weekday">平日</option>
@@ -112,22 +156,39 @@
               <option value="weekend">周末</option>
             </select>
           </div>
+
+          <div class="form-group" id="multiDayGroup" style="display: none;">
+            <label>日程安排</label>
+            <div class="multi-day-controls">
+              <button class="btn btn-small" id="btnAddDay">+ 增加一天</button>
+            </div>
+            <div class="daily-schedule" id="dailySchedule"></div>
+          </div>
+
           <div class="form-group">
             <label>人数</label>
             <input type="number" id="simPeople" value="2" min="1" max="100">
           </div>
+
           <div class="form-group">
-            <label>租赁天数</label>
+            <label>租赁天数 <span class="hint-text">(非多日模式)</span></label>
             <input type="number" id="simDays" value="1" min="1" max="30">
           </div>
+
           <div class="form-group">
             <label>选择服务</label>
-            <div class="service-checkboxes" id="serviceCheckboxes">
-            </div>
+            <div class="service-checkboxes" id="serviceCheckboxes"></div>
           </div>
+
           <div class="form-group">
             <label>应用折扣</label>
-            <div class="discount-checkboxes" id="discountCheckboxes">
+            <div class="discount-checkboxes" id="discountCheckboxes"></div>
+          </div>
+
+          <div class="form-group">
+            <label>规则优先级</label>
+            <div class="priority-config" id="priorityConfig">
+              <p class="section-hint">拖拽调整裁决顺序</p>
             </div>
           </div>
         </div>
@@ -148,11 +209,42 @@
   <div class="preview-content">
     <button class="preview-close" id="previewClose">×</button>
     <div class="preview-canvas-container">
-      <div class="poster-canvas preview-mode" id="previewCanvas">
-      </div>
+      <div class="poster-canvas preview-mode" id="previewCanvas"></div>
     </div>
   </div>
 </div>
+
+<div class="package-modal" id="packageModal">
+  <div class="modal-overlay" id="packageModalOverlay"></div>
+  <div class="modal-content">
+    <h3>创建套餐</h3>
+    <div class="form-group">
+      <label>套餐名称</label>
+      <input type="text" id="pkgName" placeholder="例如：家庭畅滑套餐">
+    </div>
+    <div class="form-group">
+      <label>包含服务</label>
+      <div class="package-service-list" id="packageServiceList"></div>
+    </div>
+    <div class="form-group">
+      <label>定价模式</label>
+      <select id="pkgPricingMode">
+        <option value="fixed_price">整包固定价</option>
+        <option value="discount">整包折扣率</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>定价数值</label>
+      <input type="number" id="pkgPricingValue" step="0.01" min="0" placeholder="整包价(元)或折扣率(如0.85)">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-small" id="btnCancelPackage">取消</button>
+      <button class="btn btn-primary" id="btnSavePackage">保存套餐</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".json" style="display: none;">
 
 <script src="app.js"></script>
 </body>
