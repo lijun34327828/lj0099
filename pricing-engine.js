@@ -12,6 +12,11 @@ const MUTUALLY_EXCLUSIVE_GROUPS = [
   ['group_discount', 'promo_code']
 ];
 
+const BILLING_DIMENSION = {
+  PER_PERSON: 'per_person',
+  PER_ORDER: 'per_order'
+};
+
 const serviceModules = [
   {
     id: 'ski_basic',
@@ -20,7 +25,8 @@ const serviceModules = [
     basePrice: 199,
     unit: '人次',
     icon: '⛷️',
-    description: '含雪具租赁'
+    description: '含雪具租赁',
+    billingDimension: BILLING_DIMENSION.PER_PERSON
   },
   {
     id: 'ski_advanced',
@@ -29,7 +35,8 @@ const serviceModules = [
     basePrice: 299,
     unit: '人次',
     icon: '🏂',
-    description: '专业雪道+教练'
+    description: '专业雪道+教练',
+    billingDimension: BILLING_DIMENSION.PER_PERSON
   },
   {
     id: 'snowboard',
@@ -38,7 +45,8 @@ const serviceModules = [
     basePrice: 259,
     unit: '人次',
     icon: '🎿',
-    description: '单板装备全套'
+    description: '单板装备全套',
+    billingDimension: BILLING_DIMENSION.PER_PERSON
   },
   {
     id: 'ski_suit_rental',
@@ -47,7 +55,8 @@ const serviceModules = [
     basePrice: 80,
     unit: '套/天',
     icon: '🧥',
-    description: '上衣+裤子'
+    description: '上衣+裤子',
+    billingDimension: BILLING_DIMENSION.PER_PERSON
   },
   {
     id: 'helmet_rental',
@@ -56,7 +65,8 @@ const serviceModules = [
     basePrice: 30,
     unit: '个/天',
     icon: '⛑️',
-    description: '专业防护头盔'
+    description: '专业防护头盔',
+    billingDimension: BILLING_DIMENSION.PER_PERSON
   },
   {
     id: 'goggles_rental',
@@ -65,7 +75,8 @@ const serviceModules = [
     basePrice: 40,
     unit: '副/天',
     icon: '🥽',
-    description: '防雾滑雪镜'
+    description: '防雾滑雪镜',
+    billingDimension: BILLING_DIMENSION.PER_PERSON
   },
   {
     id: 'locker',
@@ -74,7 +85,8 @@ const serviceModules = [
     basePrice: 25,
     unit: '个/天',
     icon: '🗄️',
-    description: '大号储物柜'
+    description: '大号储物柜',
+    billingDimension: BILLING_DIMENSION.PER_ORDER
   },
   {
     id: 'lesson_1v1',
@@ -83,7 +95,8 @@ const serviceModules = [
     basePrice: 500,
     unit: '小时',
     icon: '👨‍🏫',
-    description: '专业教练一对一'
+    description: '专业教练一对一',
+    billingDimension: BILLING_DIMENSION.PER_ORDER
   },
   {
     id: 'lesson_group',
@@ -92,7 +105,8 @@ const serviceModules = [
     basePrice: 150,
     unit: '人次',
     icon: '👥',
-    description: '5人以上团体课'
+    description: '5人以上团体课',
+    billingDimension: BILLING_DIMENSION.PER_PERSON
   },
   {
     id: 'food_coupon',
@@ -101,7 +115,8 @@ const serviceModules = [
     basePrice: 50,
     unit: '张',
     icon: '🍱',
-    description: '山顶餐厅通用'
+    description: '山顶餐厅通用',
+    billingDimension: BILLING_DIMENSION.PER_ORDER
   }
 ];
 
@@ -227,12 +242,15 @@ function calculateTotal(input) {
   
   const breakdown = [];
   let subtotal = 0;
+  const safePeople = people > 0 ? people : 1;
   
   services.forEach(service => {
     const module = serviceModules.find(m => m.id === service.id);
     if (module) {
       const periodPrice = getPeriodPrice(module, period, service.customPrice);
-      const quantity = service.quantity || 1;
+      const baseQuantity = service.quantity || 1;
+      const isPerPerson = module.billingDimension === BILLING_DIMENSION.PER_PERSON;
+      const quantity = isPerPerson ? baseQuantity * safePeople : baseQuantity;
       const amount = periodPrice * quantity;
       subtotal += amount;
       breakdown.push({
@@ -250,7 +268,9 @@ function calculateTotal(input) {
     const module = serviceModules.find(m => m.id === item.id);
     if (module) {
       const periodPrice = getPeriodPrice(module, period, item.customPrice);
-      const quantity = item.quantity || 1;
+      const baseQuantity = item.quantity || 1;
+      const isPerPerson = module.billingDimension === BILLING_DIMENSION.PER_PERSON;
+      const quantity = isPerPerson ? baseQuantity * safePeople : baseQuantity;
       const days = item.days || 1;
       const amount = periodPrice * quantity * days;
       subtotal += amount;
@@ -264,9 +284,6 @@ function calculateTotal(input) {
       });
     }
   });
-  
-  const peopleMultiplier = people > 0 ? people : 1;
-  subtotal = subtotal;
   
   let totalDiscount = 0;
   const discountBreakdown = [];
@@ -426,5 +443,6 @@ module.exports = {
   getDiscountTypes,
   getTimePeriods,
   DISCOUNT_LIMIT_RATIO,
-  MUTUALLY_EXCLUSIVE_GROUPS
+  MUTUALLY_EXCLUSIVE_GROUPS,
+  BILLING_DIMENSION
 };

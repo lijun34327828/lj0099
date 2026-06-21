@@ -779,7 +779,7 @@ async function updateCalculation() {
     const customPrice = state.pricingRules[s.id]?.[state.booking.period]?.price;
     return {
       id: s.id,
-      quantity: s.quantity * state.booking.people,
+      quantity: s.quantity,
       customPrice: customPrice
     };
   });
@@ -828,15 +828,19 @@ async function updateCalculation() {
 function calculateLocally(input) {
   const { period = 'weekday', people = 1, services = [], equipmentRentals = [], discounts = [] } = input;
   
+  const BILLING_PER_PERSON = 'per_person';
   const breakdown = [];
   let subtotal = 0;
+  const safePeople = people > 0 ? people : 1;
   
   services.forEach(service => {
     const module = state.serviceModules.find(m => m.id === service.id);
     if (module) {
       const customPrice = state.pricingRules[service.id]?.[period]?.price;
       const periodPrice = customPrice !== undefined ? customPrice : module.basePrice;
-      const quantity = service.quantity || 1;
+      const baseQuantity = service.quantity || 1;
+      const isPerPerson = module.billingDimension === BILLING_PER_PERSON;
+      const quantity = isPerPerson ? baseQuantity * safePeople : baseQuantity;
       const amount = periodPrice * quantity;
       subtotal += amount;
       breakdown.push({
@@ -855,7 +859,9 @@ function calculateLocally(input) {
     if (module) {
       const customPrice = state.pricingRules[item.id]?.[period]?.price;
       const periodPrice = customPrice !== undefined ? customPrice : module.basePrice;
-      const quantity = item.quantity || 1;
+      const baseQuantity = item.quantity || 1;
+      const isPerPerson = module.billingDimension === BILLING_PER_PERSON;
+      const quantity = isPerPerson ? baseQuantity * safePeople : baseQuantity;
       const days = item.days || 1;
       const amount = periodPrice * quantity * days;
       subtotal += amount;
